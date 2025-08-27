@@ -1,0 +1,335 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma" // مهم لـ PlanetScale
+}
+
+model User {
+  id               String  @id @default(uuid())
+  email            String  @unique
+  password         String
+  name             String?
+  verified         Boolean @default(false)
+  verificationCode String?
+  credits          Int     @default(0)
+  cashableCredits  Int     @default(0)
+  referralCode     String? @unique
+  earnings         Int     @default(0)
+
+  // Brand customization
+  logoUrl    String?
+  brandColor String?
+  fontFamily String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ✅ العلاقات
+  projects       Project[]
+  projectMembers ProjectMember[]
+  schedules      Schedule[]
+  notifications  Notification[]
+  creditLogs     CreditLog[]
+  orders         Order[]
+  withdrawals    WithdrawalRequest[]
+  achievements   Achievement[]
+  comments       Comment[]
+  auditLogs      AuditLog[]
+  mediaLibrary   MediaLibrary[]
+
+  role        String     @default("user") // user | admin
+  Product     Product[]
+  Workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+  workspaceId String?
+  
+  integrations UserIntegration[]
+  apiUsage     ApiUsage[]
+  errors       IntegrationErrorLog[]
+}
+
+model Project {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  name      String
+  desc      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ✅ محتوى المشروع
+  projectMembers ProjectMember[]
+  schedules      Schedule[]
+  posts          Post[]
+  campaigns      Campaign[]
+  tags           Tag[]           @relation("ProjectTags")
+  comments       Comment[]
+  AIInsight      AIInsight[]
+  Workspace      Workspace?      @relation(fields: [workspaceId], references: [id])
+  workspaceId    String?
+}
+
+model ProjectMember {
+  id          String  @id @default(uuid())
+  projectId   String
+  userId      String
+  role        String? // "owner" | "editor" | "viewer"
+  permissions Json? // ✅ صلاحيات مخصصة (ينشر/يعدل/يحذف)
+
+  project Project @relation(fields: [projectId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+}
+
+model Post {
+  id          String    @id @default(uuid())
+  projectId   String
+  content     String // نص أو وصف
+  mediaUrl    String? // صورة / فيديو
+  type        String // "image" | "video" | "text"
+  status      String    @default("draft") // draft | scheduled | published
+  scheduledAt DateTime?
+  publishedAt DateTime?
+
+  project    Project       @relation(fields: [projectId], references: [id])
+  schedules  Schedule[]
+  tags       Tag[]         @relation("PostTags")
+  analytics  Analytics[]
+  insights   AIInsight[]
+  comments   Comment[]
+  versions   PostVersion[]
+  Campaign   Campaign?     @relation(fields: [campaignId], references: [id])
+  campaignId String?
+}
+
+model PostVersion {
+  id        String   @id @default(uuid())
+  postId    String
+  content   String
+  mediaUrl  String?
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id])
+}
+
+model Campaign {
+  id        String   @id @default(uuid())
+  projectId String
+  name      String
+  desc      String?
+  startDate DateTime
+  endDate   DateTime
+
+  project Project @relation(fields: [projectId], references: [id])
+  posts   Post[]
+}
+
+model Schedule {
+  id          String    @id @default(uuid())
+  userId      String
+  projectId   String?
+  postId      String?
+  platform    String // youtube | instagram | facebook | threads
+  date        DateTime
+  status      String    @default("scheduled") // scheduled | published | failed
+  publishedAt DateTime?
+
+  user    User     @relation(fields: [userId], references: [id])
+  project Project? @relation(fields: [projectId], references: [id])
+  post    Post?    @relation(fields: [postId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  message   String
+  type      String // invite | publish_success | publish_fail | credit_low
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Tag {
+  id   String @id @default(uuid())
+  name String @unique
+
+  projects Project[] @relation("ProjectTags")
+  posts    Post[]    @relation("PostTags")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String // created_project | deleted_post | updated_schedule
+  entity    String // "Project" | "Post" | "Schedule"
+  entityId  String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model WithdrawalRequest {
+  id        String   @id @default(uuid())
+  userId    String
+  method    String // "iban" | "payoneer"
+  details   String
+  amount    Int
+  status    String   @default("pending") // pending | approved | rejected | paid
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model CreditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  amount    Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  productId   String
+  buyerId     String
+  creditsPaid Int
+  platformFee Int
+  sellerEarn  Int
+  createdAt   DateTime @default(now())
+
+  buyer   User    @relation(fields: [buyerId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model Product {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  type         String // "template" | "image" | "video"
+  priceCredits Int
+  fileUrl      String
+  thumbnailUrl String?
+  ownerId      String
+  createdAt    DateTime @default(now())
+
+  owner     User    @relation(fields: [ownerId], references: [id])
+  orders    Order[]
+  isActive  Boolean @default(true)
+  isDeleted Boolean @default(false)
+}
+
+model AIInsight {
+  id         String   @id @default(uuid())
+  postId     String?
+  projectId  String?
+  suggestion String
+  confidence Float
+  createdAt  DateTime @default(now())
+
+  post    Post?    @relation(fields: [postId], references: [id])
+  project Project? @relation(fields: [projectId], references: [id])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  userId    String
+  postId    String?
+  projectId String?
+  message   String
+  createdAt DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id])
+  post    Post?    @relation(fields: [postId], references: [id])
+  project Project? @relation(fields: [projectId], references: [id])
+}
+
+model Analytics {
+  id        String   @id @default(uuid())
+  postId    String
+  views     Int      @default(0)
+  likes     Int      @default(0)
+  comments  Int      @default(0)
+  clicks    Int      @default(0)
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id])
+}
+
+model Achievement {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String // "First Post Published", "1000 Views"
+  icon      String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  domain    String? // subdomain.company.com
+  logoUrl   String?
+  createdAt DateTime @default(now())
+
+  users    User[]
+  projects Project[]
+}
+
+model MediaLibrary {
+  id        String   @id @default(uuid())
+  userId    String
+  fileUrl   String
+  type      String // image | video | doc
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+model UserIntegration {
+  id        String   @id @default(uuid())
+  userId    String
+  platform  String
+  token     String
+  refresh   String?
+  expiresAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, platform]) // Composite Key
+}
+
+model WebhookLog {
+  id        String   @id @default(uuid())
+  platform  String   // youtube | instagram | facebook | etc
+  event     String   // event type
+  payload   Json     // البيانات اللي جاية من المنصة
+  createdAt DateTime @default(now())
+}
+model ApiUsage {
+  id        String   @id @default(uuid())
+  userId    String
+  service   String   // openai | stability | runway | etc
+  tokens    Int      // عدد التوكنات المستهلكة
+  credits   Int      // الكريدت المستهلك
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+model IntegrationErrorLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  platform  String
+  errorMsg  String
+  payload   Json?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+}

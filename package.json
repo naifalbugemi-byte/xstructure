@@ -1,0 +1,53 @@
+{
+  "name": "xstructure",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
+    "body-parser": "^2.2.0",
+    "bull-board": "^1.7.2",
+    "bullmq": "^5.58.2",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "ffmpeg-static": "^5.2.0",
+    "fluent-ffmpeg": "^2.1.3",
+    "ioredis": "^5.7.0",
+    "jsonwebtoken": "^9.0.2",
+    "next": "^15.5.0",
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^7.0.5",
+    "openai": "^5.15.0",
+    "pg": "^8.16.3",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "swr": "^2.3.6"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@prisma/client": "^6.14.0",
+    "@tailwindcss/postcss": "^4",
+    "@types/bcrypt": "^6.0.0",
+    "@types/body-parser": "^1.19.6",
+    "@types/express": "^5.0.3",
+    "@types/node": "^20.19.11",
+    "@types/node-fetch": "^2.6.13",
+    "@types/nodemailer": "^7.0.1",
+    "@types/pg": "^8.15.5",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.0",
+    "prisma": "^6.14.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
