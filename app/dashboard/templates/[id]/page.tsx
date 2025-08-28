@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
-interface PageProps {
-  params: Promise<{ id: string }>;
-}
-
-export default async function TemplateEditorPage({ params }: PageProps) {
-  const { id } = await params;
+export default function TemplateEditor() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
 
   const [template, setTemplate] = useState<any>(null);
   const [logo, setLogo] = useState<File | null>(null);
@@ -65,7 +63,10 @@ export default async function TemplateEditorPage({ params }: PageProps) {
             />
           )}
           {text && (
-            <span style={{ color }} className="absolute bottom-4 text-xl font-bold">
+            <span
+              style={{ color }}
+              className="absolute bottom-4 text-xl font-bold"
+            >
               {text}
             </span>
           )}
