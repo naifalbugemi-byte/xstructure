@@ -1,7 +1,7 @@
 "use client";
 import { motion, useMotionValue, useTransform, useScroll } from "framer-motion";
 import { useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
+import  Button  from "@/components/ui/Button";
 
 export default function LandingPage() {
   // 🖱️ Interactive Background
