@@ -1,14 +1,23 @@
 "use client";
 import { motion, useMotionValue, useTransform, useScroll } from "framer-motion";
 import { useEffect, useRef } from "react";
-import  Button  from "@/components/ui/Button";
+import Button from "@/components/ui/Button";
+import AIPlayground from "@/components/AIPlayground"; // 🧪 المكوّن الجديد
 
 export default function LandingPage() {
   // 🖱️ Interactive Background
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const rotateX = useTransform(mouseY, [0, typeof window !== "undefined" ? window.innerHeight : 1000], [15, -15]);
-  const rotateY = useTransform(mouseX, [0, typeof window !== "undefined" ? window.innerWidth : 1000], [-15, 15]);
+  const rotateX = useTransform(
+    mouseY,
+    [0, typeof window !== "undefined" ? window.innerHeight : 1000],
+    [15, -15]
+  );
+  const rotateY = useTransform(
+    mouseX,
+    [0, typeof window !== "undefined" ? window.innerWidth : 1000],
+    [-15, 15]
+  );
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -21,7 +30,10 @@ export default function LandingPage() {
 
   // 📜 Parallax Scroll
   const ref = useRef(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
   const y1 = useTransform(scrollYProgress, [0, 1], [0, -100]);
   const y2 = useTransform(scrollYProgress, [0, 1], [50, -150]);
 
@@ -56,14 +68,20 @@ export default function LandingPage() {
           Xstructure.ai
         </motion.h1>
         <p className="text-xl md:text-2xl text-gray-300 max-w-2xl">
-          المنصة العالمية لإدارة <span className="font-bold text-white">البراند، المشاريع، والنشر التلقائي</span>  
+          المنصة العالمية لإدارة{" "}
+          <span className="font-bold text-white">
+            البراند، المشاريع، والنشر التلقائي
+          </span>{" "}
           بقوة الذكاء الاصطناعي.
         </p>
         <div className="flex gap-4 mt-6">
           <Button className="px-6 py-3 text-lg bg-indigo-600 hover:bg-indigo-700">
             🚀 ابدأ الآن
           </Button>
-          <Button variant="outline" className="px-6 py-3 text-lg text-white border-gray-400 hover:bg-gray-800">
+          <Button
+            variant="outline"
+            className="px-6 py-3 text-lg text-white border-gray-400 hover:bg-gray-800"
+          >
             👀 شاهد العرض
           </Button>
         </div>
@@ -79,10 +97,22 @@ export default function LandingPage() {
         </motion.h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 max-w-6xl mx-auto px-6">
           {[
-            { title: "AI Branding", desc: "تصميم الهوية والشعارات والمحتوى الذكي تلقائياً." },
-            { title: "Projects", desc: "إدارة الحملات والمشاريع مع فريقك وجدولة المحتوى." },
-            { title: "Auto Publishing", desc: "نشر تلقائي لليوتيوب، انستجرام، فيسبوك، ثريدز." },
-            { title: "Marketplace", desc: "بيع وشراء القوالب والمنتجات الرقمية بالكريدتس." },
+            {
+              title: "AI Branding",
+              desc: "تصميم الهوية والشعارات والمحتوى الذكي تلقائياً.",
+            },
+            {
+              title: "Projects",
+              desc: "إدارة الحملات والمشاريع مع فريقك وجدولة المحتوى.",
+            },
+            {
+              title: "Auto Publishing",
+              desc: "نشر تلقائي لليوتيوب، انستجرام، فيسبوك، ثريدز.",
+            },
+            {
+              title: "Marketplace",
+              desc: "بيع وشراء القوالب والمنتجات الرقمية بالكريدتس.",
+            },
           ].map((f, i) => (
             <motion.div
               key={i}
@@ -90,12 +120,17 @@ export default function LandingPage() {
               whileHover={{ scale: 1.05 }}
               style={{ y: y2 }}
             >
-              <h3 className="text-xl font-bold mb-3 text-indigo-400">{f.title}</h3>
+              <h3 className="text-xl font-bold mb-3 text-indigo-400">
+                {f.title}
+              </h3>
               <p className="text-gray-300">{f.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
+
+      {/* 🧪 AI Playground */}
+      <AIPlayground />
 
       {/* 💰 Pricing مع Parallax */}
       <section className="relative z-10 py-20 bg-gray-950">
@@ -107,8 +142,24 @@ export default function LandingPage() {
         </motion.h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto px-6">
           {[
-            { name: "Standard", price: "99 SAR / 25 USD", features: ["1000 Credits", "100 طلب بالدقيقة", "نشر 3 منصات"] },
-            { name: "Pro", price: "199 SAR / 50 USD", features: ["5000 Credits", "500 طلب بالدقيقة", "نشر غير محدود"] },
+            {
+              name: "Standard",
+              price: "99 SAR / 25 USD",
+              features: [
+                "1000 Credits",
+                "100 طلب بالدقيقة",
+                "نشر 3 منصات",
+              ],
+            },
+            {
+              name: "Pro",
+              price: "199 SAR / 50 USD",
+              features: [
+                "5000 Credits",
+                "500 طلب بالدقيقة",
+                "نشر غير محدود",
+              ],
+            },
           ].map((p, i) => (
             <motion.div
               key={i}
@@ -119,9 +170,13 @@ export default function LandingPage() {
               <h3 className="text-2xl font-bold mb-4">{p.name}</h3>
               <p className="text-4xl font-extrabold mb-6">{p.price}</p>
               <ul className="space-y-2 mb-6">
-                {p.features.map((f, i2) => <li key={i2}>✅ {f}</li>)}
+                {p.features.map((f, i2) => (
+                  <li key={i2}>✅ {f}</li>
+                ))}
               </ul>
-              <Button className="w-full bg-white text-indigo-600 hover:bg-gray-200">اشترك الآن</Button>
+              <Button className="w-full bg-white text-indigo-600 hover:bg-gray-200">
+                اشترك الآن
+              </Button>
             </motion.div>
           ))}
         </div>
