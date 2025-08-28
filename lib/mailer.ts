@@ -1,29 +1,32 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST,
-  port: Number(process.env.MAIL_PORT),
-  secure: false,
+  service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
 });
 
-export async function sendWelcomeEmail(to: string, name?: string) {
-  return transporter.sendMail({
-    from: `"XSTRUCTURE" <${process.env.MAIL_USER}>`,
+// الأساسيات
+export async function sendWelcomeEmail(to: string) {
+  await transporter.sendMail({
+    from: process.env.SMTP_USER,
     to,
-    subject: "Welcome to XSTRUCTURE 🚀",
-    html: `<h1>Welcome ${name || ""}</h1><p>Your account has been created.</p>`,
+    subject: "Welcome!",
+    text: "Welcome to our platform 🎉",
   });
 }
 
-export async function sendBusinessEmail(to: string, company?: string) {
-  return transporter.sendMail({
-    from: `"XSTRUCTURE" <${process.env.MAIL_USER}>`,
+export async function sendBusinessEmail(to: string, subject: string, text: string) {
+  await transporter.sendMail({
+    from: process.env.SMTP_USER,
     to,
-    subject: "Business Request Received",
-    html: `<p>We received your request${company ? ` from ${company}` : ""}. We'll contact you soon.</p>`,
+    subject,
+    text,
   });
 }
+
+// alias للدوال اللي الأكواد تستدعيها
+export const sendVerificationEmail = sendWelcomeEmail;
+export const sendEmail = sendBusinessEmail;

@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
-import { prisma } from "@/lib/prisma";
 
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET!;
 
@@ -9,7 +8,7 @@ export interface AuthUser {
   role: string;
 }
 
-// ✅ استخدام سريع: يرجع بيانات من التوكن بس
+// الدوال الأصلية
 export function getUserFromRequest(req: NextRequest): AuthUser | null {
   try {
     const authHeader = req.headers.get("authorization");
@@ -20,23 +19,24 @@ export function getUserFromRequest(req: NextRequest): AuthUser | null {
 
     const decoded = jwt.verify(token, ACCESS_SECRET) as AuthUser;
     return decoded;
+  } catch (err) {
+    return null;
+  }
+}
+
+export async function getUserFromAuth(token: string): Promise<AuthUser | null> {
+  try {
+    const decoded = jwt.verify(token, ACCESS_SECRET) as AuthUser;
+    return decoded;
   } catch {
     return null;
   }
 }
 
-// ✅ استخدام ثقيل: يرجع المستخدم من DB
-export async function getUserFromAuth(req: NextRequest) {
-  try {
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader) return null;
+// alias للدوال الناقصة
+export const getUserFromToken = getUserFromRequest;
+export const getCurrentUser = getUserFromAuth;
 
-    const token = authHeader.split(" ")[1];
-    if (!token) return null;
-
-    const decoded = jwt.verify(token, ACCESS_SECRET) as { id: string };
-    return await prisma.user.findUnique({ where: { id: decoded.id } });
-  } catch {
-    return null;
-  }
+export function signToken(payload: any) {
+  return jwt.sign(payload, ACCESS_SECRET, { expiresIn: "1h" });
 }
