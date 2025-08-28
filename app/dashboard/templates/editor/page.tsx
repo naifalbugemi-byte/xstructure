@@ -2,13 +2,19 @@
 
 import { useEffect, useState } from "react";
 
-export default function TemplateEditor({ searchParams }: { searchParams: { id: string } }) {
+interface TemplateEditorProps {
+  searchParams?: { id?: string };
+}
+
+export default function TemplateEditor({ searchParams }: TemplateEditorProps) {
   const [template, setTemplate] = useState<any>(null);
   const [logo, setLogo] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [color, setColor] = useState("#000000");
 
   useEffect(() => {
+    if (!searchParams?.id) return;
+
     fetch(`/api/templates/list?id=${searchParams.id}`)
       .then((res) => res.json())
       .then((data) => {
@@ -17,7 +23,7 @@ export default function TemplateEditor({ searchParams }: { searchParams: { id: s
         setText(t?.text || "");
         setColor(t?.color || "#000000");
       });
-  }, [searchParams.id]);
+  }, [searchParams?.id]);
 
   const handleSave = async () => {
     const logoUrl = logo ? URL.createObjectURL(logo) : template.logoUrl;
