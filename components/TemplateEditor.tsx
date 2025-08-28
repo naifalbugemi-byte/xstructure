@@ -2,28 +2,24 @@
 
 import { useEffect, useState } from "react";
 
-export default function TemplateEditor({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function TemplateEditor({ id }: { id: string }) {
   const [template, setTemplate] = useState<any>(null);
   const [logo, setLogo] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [color, setColor] = useState("#000000");
 
   useEffect(() => {
-    if (!params?.id) return;
+    if (!id) return;
 
-    fetch(`/api/templates/list?id=${params.id}`)
+    fetch(`/api/templates/list?id=${id}`)
       .then((res) => res.json())
       .then((data) => {
-        const t = data.find((d: any) => d.id === params.id);
+        const t = data.find((d: any) => d.id === id);
         setTemplate(t);
         setText(t?.text || "");
         setColor(t?.color || "#000000");
       });
-  }, [params?.id]);
+  }, [id]);
 
   const handleSave = async () => {
     const logoUrl = logo ? URL.createObjectURL(logo) : template.logoUrl;
@@ -54,11 +50,7 @@ export default function TemplateEditor({
       <div className="bg-white p-6 rounded-2xl shadow grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* المعاينة */}
         <div className="relative border rounded-xl p-4 flex justify-center items-center">
-          <img
-            src={template.imageUrl}
-            alt="Template"
-            className="rounded-lg max-h-[400px]"
-          />
+          <img src={template.imageUrl} alt="Template" className="rounded-lg max-h-[400px]" />
           {logo && (
             <img
               src={URL.createObjectURL(logo)}
@@ -67,10 +59,7 @@ export default function TemplateEditor({
             />
           )}
           {text && (
-            <span
-              style={{ color }}
-              className="absolute bottom-4 text-xl font-bold"
-            >
+            <span style={{ color }} className="absolute bottom-4 text-xl font-bold">
               {text}
             </span>
           )}
@@ -80,10 +69,7 @@ export default function TemplateEditor({
         <div className="space-y-4">
           <div>
             <label className="block font-medium">أضف شعار</label>
-            <input
-              type="file"
-              onChange={(e) => setLogo(e.target.files?.[0] || null)}
-            />
+            <input type="file" onChange={(e) => setLogo(e.target.files?.[0] || null)} />
           </div>
 
           <div>
