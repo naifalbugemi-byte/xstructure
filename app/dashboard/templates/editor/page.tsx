@@ -2,28 +2,25 @@
 
 import { useEffect, useState } from "react";
 
-interface TemplateEditorProps {
-  searchParams?: { id?: string };
-}
-
-export default function TemplateEditor({ searchParams }: TemplateEditorProps) {
+// ✅ خلي البارامز باسم params (Next.js 15 ما يمرر searchParams كـ prop عادي)
+export default function TemplateEditor({ params }: { params: { id: string } }) {
   const [template, setTemplate] = useState<any>(null);
   const [logo, setLogo] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [color, setColor] = useState("#000000");
 
   useEffect(() => {
-    if (!searchParams?.id) return;
+    if (!params?.id) return;
 
-    fetch(`/api/templates/list?id=${searchParams.id}`)
+    fetch(`/api/templates/list?id=${params.id}`)
       .then((res) => res.json())
       .then((data) => {
-        const t = data.find((d: any) => d.id === searchParams.id);
+        const t = data.find((d: any) => d.id === params.id);
         setTemplate(t);
         setText(t?.text || "");
         setColor(t?.color || "#000000");
       });
-  }, [searchParams?.id]);
+  }, [params?.id]);
 
   const handleSave = async () => {
     const logoUrl = logo ? URL.createObjectURL(logo) : template.logoUrl;
