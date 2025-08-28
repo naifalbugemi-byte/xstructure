@@ -3,27 +3,29 @@
 import { useEffect, useState } from "react";
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
-export default function TemplateEditorPage({ params }: PageProps) {
+export default async function TemplateEditorPage({ params }: PageProps) {
+  const { id } = await params;
+
   const [template, setTemplate] = useState<any>(null);
   const [logo, setLogo] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [color, setColor] = useState("#000000");
 
   useEffect(() => {
-    if (!params?.id) return;
+    if (!id) return;
 
-    fetch(`/api/templates/list?id=${params.id}`)
+    fetch(`/api/templates/list?id=${id}`)
       .then((res) => res.json())
       .then((data) => {
-        const t = data.find((d: any) => d.id === params.id);
+        const t = data.find((d: any) => d.id === id);
         setTemplate(t);
         setText(t?.text || "");
         setColor(t?.color || "#000000");
       });
-  }, [params?.id]);
+  }, [id]);
 
   const handleSave = async () => {
     const logoUrl = logo ? URL.createObjectURL(logo) : template.logoUrl;
@@ -54,20 +56,14 @@ export default function TemplateEditorPage({ params }: PageProps) {
       <div className="bg-white p-6 rounded-2xl shadow grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* المعاينة */}
         <div className="relative border rounded-xl p-4 flex justify-center items-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={template.imageUrl} alt="Template" className="rounded-lg max-h-[400px]" />
-
           {logo && (
-            <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={URL.createObjectURL(logo)}
-                alt="Logo"
-                className="absolute top-4 left-4 w-20 h-20 object-contain"
-              />
-            </>
+            <img
+              src={URL.createObjectURL(logo)}
+              alt="Logo"
+              className="absolute top-4 left-4 w-20 h-20 object-contain"
+            />
           )}
-
           {text && (
             <span style={{ color }} className="absolute bottom-4 text-xl font-bold">
               {text}
@@ -102,7 +98,10 @@ export default function TemplateEditorPage({ params }: PageProps) {
             />
           </div>
 
-          <button onClick={handleSave} className="px-4 py-2 bg-purple-600 text-white rounded-lg">
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg"
+          >
             حفظ التعديلات
           </button>
         </div>
