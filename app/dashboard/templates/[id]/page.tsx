@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 
-export default function TemplateEditor() {
-  const searchParams = useSearchParams();
-  const id = searchParams.get("id");
+export default function TemplateEditor({ params }: { params: { id: string } }) {
+  const id = params.id;
 
   const [template, setTemplate] = useState<any>(null);
   const [logo, setLogo] = useState<File | null>(null);
@@ -54,7 +52,11 @@ export default function TemplateEditor() {
       <div className="bg-white p-6 rounded-2xl shadow grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* المعاينة */}
         <div className="relative border rounded-xl p-4 flex justify-center items-center">
-          <img src={template.imageUrl} alt="Template" className="rounded-lg max-h-[400px]" />
+          <img
+            src={template.imageUrl}
+            alt="Template"
+            className="rounded-lg max-h-[400px]"
+          />
           {logo && (
             <img
               src={URL.createObjectURL(logo)}
@@ -76,7 +78,10 @@ export default function TemplateEditor() {
         <div className="space-y-4">
           <div>
             <label className="block font-medium">أضف شعار</label>
-            <input type="file" onChange={(e) => setLogo(e.target.files?.[0] || null)} />
+            <input
+              type="file"
+              onChange={(e) => setLogo(e.target.files?.[0] || null)}
+            />
           </div>
 
           <div>
