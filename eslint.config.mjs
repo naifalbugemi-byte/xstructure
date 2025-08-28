@@ -27,7 +27,7 @@ export default [
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": "warn",
       "@typescript-eslint/no-require-imports": "off",
-      "@next/next/no-img-element": "warn"
+      "@next/next/no-img-element": "warn" // ✅ عدلنا الاسم هنا
     },
   },
 ];
