@@ -1,48 +1,91 @@
+"use client";
+
+import { FileText } from "lucide-react";
+
 export default function TermsPage() {
   return (
-    <div className="p-10 max-w-4xl mx-auto text-gray-200">
-      <h1 className="text-4xl font-bold mb-6 text-indigo-400">الشروط والأحكام</h1>
-      <p className="leading-relaxed whitespace-pre-line">
-        {`Terms & Conditions (الشروط والأحكام)
-بالعربية
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950">
+      {/* Header */}
+      <div className="max-w-5xl mx-auto px-6 pt-24 pb-12 text-center">
+        <div className="flex items-center justify-center mb-6">
+          <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+            <FileText className="w-7 h-7 text-white" />
+          </div>
+        </div>
+        <h1 className="text-5xl font-bold text-white mb-4 font-inter">الشروط والأحكام</h1>
+        <p className="text-slate-300 text-lg font-inter">Terms & Conditions</p>
+      </div>
 
-باستخدامك لخدمات Xstructure.ai فإنك توافق على الالتزام بكامل الشروط والأحكام المبينة هنا.
-هذه الشروط تنطبق على جميع المستخدمين دون استثناء، وتشمل الوصول إلى المنصة، استخدام الحساب، الخدمات المدفوعة، وجدولة أو نشر المحتوى.
+      {/* Content */}
+      <div className="max-w-4xl mx-auto px-6 pb-20">
+        <div className="glass-morphism rounded-3xl p-10 border border-blue-500/20 text-slate-300 leading-relaxed whitespace-pre-line font-inter">
+{`🔹 بالعربية
 
-الحسابات: يجب أن يكون عمرك 18 عامًا أو أكثر. تتحمل المسؤولية الكاملة عن أمان حسابك وكلمة المرور.
+باستخدامك Xstructure.ai فإنك توافق على الشروط التالية:
 
-الدفع والاشتراكات: جميع المدفوعات نهائية وغير قابلة للاسترداد. بمجرد الاشتراك أو شراء أي خدمة فإنك تفوض Xstructure.ai بخصم المبلغ المتفق عليه. لا يوجد خيار استرجاع أو استرداد.
+1. الملكية الفكرية:
+جميع الحقوق الفكرية والمحتوى والتصاميم والبرمجيات تعود ملكيتها إلى Xstructure.ai ولا يجوز نسخها أو إعادة استخدامها بدون إذن خطي.
 
-استخدام المنصة: لا يجوز استخدام المنصة لأي أنشطة غير قانونية أو مخالفة للأنظمة المحلية أو الدولية. أي إساءة استخدام قد تؤدي إلى تعليق أو إلغاء حسابك.
+2. استخدام الخدمة:
+- يجب استخدام الخدمة لأغراض قانونية فقط.
+- يحظر استخدام المنصة لأي أنشطة غير مشروعة أو مضرة.
+- الشركة تحتفظ بحق تعليق أو إنهاء أي حساب عند مخالفة هذه الشروط.
 
-حقوق الملكية الفكرية: جميع المحتويات، الأكواد، التصميمات، الواجهات، والأدوات الخاصة بالمنصة هي ملكية فكرية حصرية لـ Xstructure.ai. لا يحق لك نسخها أو إعادة بيعها أو إعادة توزيعها.
+3. إنشاء المحتوى:
+- المحتوى الذي تنشئه أو ترفعه هو مسؤوليتك الكاملة.
+- Xstructure.ai لا تتحمل أي مسؤولية قانونية عن المحتوى المرفوع من المستخدمين.
 
-حدود المسؤولية: تقدم المنصة "كما هي" دون أي ضمانات صريحة أو ضمنية. لا تتحمل Xstructure.ai أي مسؤولية عن خسائر مالية، فقدان بيانات، أعطال، أو نتائج سلبية ناتجة عن استخدام المنصة أو الاعتماد عليها.
+4. المدفوعات والاشتراكات:
+- الرسوم المدفوعة غير قابلة للاسترداد إلا في الحالات المنصوص عليها قانونياً.
+- الشركة تحتفظ بحق تعديل الأسعار أو الخطط مع إخطار المستخدمين مسبقاً.
 
-الإخلاء من المسؤولية: لا تتحمل Xstructure.ai أو أي من شركائها أو مزودي خدماتها أي التزام قانوني تجاهك بأي شكل كان، سواء عن طريق العقد أو الضرر أو أي نظرية قانونية أخرى.
+5. حدود المسؤولية:
+- لا تتحمل Xstructure.ai أي مسؤولية عن أضرار غير مباشرة أو خسائر مالية ناتجة عن استخدام الخدمة.
+- الخدمة مقدمة "كما هي" بدون أي ضمانات صريحة أو ضمنية.
 
-القانون المعمول به: تخضع هذه الشروط لقوانين المملكة العربية السعودية، مع استبعاد أي تعارض مع القوانين الدولية.
+6. التعديلات:
+- يحق لـ Xstructure.ai تعديل هذه الشروط في أي وقت.
+- استمرارك باستخدام الخدمة بعد التعديل يعني موافقتك على الشروط الجديدة.
 
-بالإنجليزية
+7. القانون المطبق وحل النزاعات:
+- تخضع هذه الشروط لأنظمة ولوائح المملكة العربية السعودية.
+- أي نزاع يخضع للتحكيم وفق القوانين السعودية.
 
-By accessing or using Xstructure.ai, you agree to be bound by these Terms and Conditions.
-These terms apply to all users without exception and govern account usage, paid services, content scheduling, and publishing features.
+---
 
-Accounts: You must be at least 18 years old. You are solely responsible for maintaining the confidentiality of your account and password.
+🔹 In English
 
-Payments & Subscriptions: All payments are final and non-refundable. Once you subscribe or purchase any service, you authorize Xstructure.ai to charge the agreed amount. No refunds or cancellations are provided.
+By accessing or using Xstructure.ai, you agree to the following terms:
 
-Platform Usage: You may not use the platform for illegal or unauthorized purposes. Any misuse may result in suspension or termination of your account.
+1. Intellectual Property:
+All intellectual property rights, content, designs, and software belong to Xstructure.ai and may not be copied or reused without prior written consent.
 
-Intellectual Property: All content, code, designs, interfaces, and tools provided by Xstructure.ai are proprietary intellectual property. You may not copy, resell, or redistribute them.
+2. Use of Service:
+- The service must be used for lawful purposes only.
+- Misuse, illegal, or harmful activities are strictly prohibited.
+- Xstructure.ai reserves the right to suspend or terminate accounts for violations.
 
-Limitation of Liability: The platform is provided “as is” without warranties of any kind, express or implied. Xstructure.ai shall not be liable for any losses, data breaches, downtime, or damages resulting from use or reliance on the platform.
+3. User Content:
+- You are solely responsible for any content you create or upload.
+- Xstructure.ai shall not be held liable for user-generated content.
 
-Disclaimer: Xstructure.ai and its affiliates, partners, or service providers shall not bear any legal obligation towards you under contract, tort, or any other legal theory.
+4. Payments & Subscriptions:
+- Fees are non-refundable unless required by law.
+- The company reserves the right to change pricing or plans with prior notice.
 
-Governing Law: These terms are governed by the laws of the Kingdom of Saudi Arabia, excluding conflicts of law principles.).
-        `}
-      </p>
+5. Limitation of Liability:
+- Xstructure.ai shall not be liable for indirect damages, financial loss, or consequential harm resulting from service use.
+- The service is provided "as is" without warranties of any kind.
+
+6. Modifications:
+- Xstructure.ai may update these terms at any time.
+- Continued use of the service after changes constitutes acceptance.
+
+7. Governing Law & Dispute Resolution:
+- These terms are governed by the laws and regulations of the Kingdom of Saudi Arabia.
+- Disputes shall be resolved through arbitration in accordance with Saudi law.`}
+        </div>
+      </div>
     </div>
   );
 }

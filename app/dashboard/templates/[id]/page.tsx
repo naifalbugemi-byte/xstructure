@@ -2,10 +2,17 @@
 
 import { useEffect, useState } from "react";
 
-export default function TemplateEditor({ params }: { params: { id: string } }) {
-  const id = params.id;
+interface Template {
+  id: string;
+  imageUrl: string;
+  logoUrl?: string;
+  text?: string;
+  color?: string;
+}
 
-  const [template, setTemplate] = useState<any>(null);
+export default function TemplatePage({ params }: { params: { id: string } }) {
+  const { id } = params;
+  const [template, setTemplate] = useState<Template | null>(null);
   const [logo, setLogo] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [color, setColor] = useState("#000000");
@@ -13,34 +20,53 @@ export default function TemplateEditor({ params }: { params: { id: string } }) {
   useEffect(() => {
     if (!id) return;
 
-    fetch(`/api/templates/list?id=${id}`)
-      .then((res) => res.json())
-      .then((data) => {
+    const loadTemplate = async () => {
+      try {
+        const res = await fetch(`/api/templates/list?id=${id}`);
+        if (!res.ok) throw new Error("فشل تحميل القالب");
+
+        const data = await res.json();
         const t = data.find((d: any) => d.id === id);
-        setTemplate(t);
-        setText(t?.text || "");
-        setColor(t?.color || "#000000");
-      });
+        if (t) {
+          setTemplate(t);
+          setText(t.text || "");
+          setColor(t.color || "#000000");
+        }
+      } catch (err) {
+        console.error("Error fetching template:", err);
+      }
+    };
+
+    loadTemplate();
   }, [id]);
 
   const handleSave = async () => {
+    if (!template) return;
+
     const logoUrl = logo ? URL.createObjectURL(logo) : template.logoUrl;
 
-    const res = await fetch("/api/templates/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: template.id,
-        imageUrl: template.imageUrl,
-        logoUrl,
-        text,
-        color,
-      }),
-    });
+    try {
+      const res = await fetch("/api/templates/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: template.id,
+          imageUrl: template.imageUrl,
+          logoUrl,
+          text,
+          color,
+        }),
+      });
 
-    const data = await res.json();
-    alert("✅ تم الحفظ بنجاح");
-    setTemplate(data);
+      if (!res.ok) throw new Error("فشل الحفظ");
+
+      const data = await res.json();
+      alert("✅ تم الحفظ بنجاح");
+      setTemplate(data);
+    } catch (err) {
+      console.error("Error saving template:", err);
+      alert("❌ فشل الحفظ");
+    }
   };
 
   if (!template) return <div className="p-6">جاري التحميل...</div>;

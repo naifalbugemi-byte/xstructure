@@ -9,16 +9,31 @@ datasource db {
 }
 
 model User {
-  id               String  @id @default(uuid())
-  email            String  @unique
-  password         String
-  name             String?
-  verified         Boolean @default(false)
-  verificationCode String?
-  credits          Int     @default(0)
-  cashableCredits  Int     @default(0)
-  referralCode     String? @unique
-  earnings         Int     @default(0)
+  id                    String    @id @default(uuid())
+  email                 String    @unique
+  password              String
+  name                  String?
+  verified              Boolean   @default(false)
+  verificationCode      String?
+  verificationExpiresAt DateTime?
+  credits               Int       @default(0)
+  cashableCredits       Int       @default(0)
+
+  referralCode   String? @unique // كود الريفيرال الخاص فيه
+  referralsCount Int     @default(0) // كم شخص سجل بكوده
+  earnings       Int     @default(0) // أرباحه
+
+  role String @default("USER") // USER | ADMIN
+  isBanned   Boolean @default(false)  // ✅ جديد
+  isDeleted  Boolean @default(false)  // ✅ جديد
+
+  // علاقات
+  creditLogs    CreditLog[]
+  creditsUsage  CreditsUsage[]
+  refreshTokens RefreshToken[]
+
+  referralsMade ReferralLog[] @relation("ReferralsMade") // ✅ بدون fields/references
+  referralsUsed ReferralLog[] @relation("ReferralsUsed") // ✅ بدون fields/references
 
   // Brand customization
   logoUrl    String?
@@ -28,27 +43,35 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // ✅ العلاقات
   projects       Project[]
   projectMembers ProjectMember[]
   schedules      Schedule[]
   notifications  Notification[]
-  creditLogs     CreditLog[]
   orders         Order[]
   withdrawals    WithdrawalRequest[]
   achievements   Achievement[]
   comments       Comment[]
   auditLogs      AuditLog[]
   mediaLibrary   MediaLibrary[]
+  Product        Product[]
+  Workspace      Workspace?          @relation(fields: [workspaceId], references: [id])
+  workspaceId    String?
 
-  role        String     @default("user") // user | admin
-  Product     Product[]
-  Workspace   Workspace? @relation(fields: [workspaceId], references: [id])
-  workspaceId String?
-  
   integrations UserIntegration[]
   apiUsage     ApiUsage[]
   errors       IntegrationErrorLog[]
+    planRequests PlanRequest[]          // ✅ علاقة جديدة
+
+}
+
+model ReferralLog {
+  id        String   @id @default(uuid())
+  ownerId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  owner User @relation("ReferralsMade", fields: [ownerId], references: [id])
+  user  User @relation("ReferralsUsed", fields: [userId], references: [id])
 }
 
 model Project {
@@ -60,7 +83,6 @@ model Project {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // ✅ محتوى المشروع
   projectMembers ProjectMember[]
   schedules      Schedule[]
   posts          Post[]
@@ -76,8 +98,8 @@ model ProjectMember {
   id          String  @id @default(uuid())
   projectId   String
   userId      String
-  role        String? // "owner" | "editor" | "viewer"
-  permissions Json? // ✅ صلاحيات مخصصة (ينشر/يعدل/يحذف)
+  role        String?
+  permissions Json?
 
   project Project @relation(fields: [projectId], references: [id])
   user    User    @relation(fields: [userId], references: [id])
@@ -86,10 +108,10 @@ model ProjectMember {
 model Post {
   id          String    @id @default(uuid())
   projectId   String
-  content     String // نص أو وصف
-  mediaUrl    String? // صورة / فيديو
-  type        String // "image" | "video" | "text"
-  status      String    @default("draft") // draft | scheduled | published
+  content     String
+  mediaUrl    String?
+  type        String
+  status      String    @default("draft")
   scheduledAt DateTime?
   publishedAt DateTime?
 
@@ -131,9 +153,9 @@ model Schedule {
   userId      String
   projectId   String?
   postId      String?
-  platform    String // youtube | instagram | facebook | threads
+  platform    String
   date        DateTime
-  status      String    @default("scheduled") // scheduled | published | failed
+  status      String    @default("scheduled")
   publishedAt DateTime?
 
   user    User     @relation(fields: [userId], references: [id])
@@ -145,7 +167,7 @@ model Notification {
   id        String   @id @default(uuid())
   userId    String
   message   String
-  type      String // invite | publish_success | publish_fail | credit_low
+  type      String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 
@@ -163,8 +185,8 @@ model Tag {
 model AuditLog {
   id        String   @id @default(uuid())
   userId    String
-  action    String // created_project | deleted_post | updated_schedule
-  entity    String // "Project" | "Post" | "Schedule"
+  action    String
+  entity    String
   entityId  String
   createdAt DateTime @default(now())
 
@@ -174,10 +196,10 @@ model AuditLog {
 model WithdrawalRequest {
   id        String   @id @default(uuid())
   userId    String
-  method    String // "iban" | "payoneer"
+  method    String
   details   String
   amount    Int
-  status    String   @default("pending") // pending | approved | rejected | paid
+  status    String   @default("pending")
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
@@ -210,7 +232,7 @@ model Product {
   id           String   @id @default(cuid())
   title        String
   description  String?
-  type         String // "template" | "image" | "video"
+  type         String
   priceCredits Int
   fileUrl      String
   thumbnailUrl String?
@@ -263,7 +285,7 @@ model Analytics {
 model Achievement {
   id        String   @id @default(uuid())
   userId    String
-  title     String // "First Post Published", "1000 Views"
+  title     String
   icon      String?
   createdAt DateTime @default(now())
 
@@ -273,7 +295,7 @@ model Achievement {
 model Workspace {
   id        String   @id @default(uuid())
   name      String
-  domain    String? // subdomain.company.com
+  domain    String?
   logoUrl   String?
   createdAt DateTime @default(now())
 
@@ -285,13 +307,14 @@ model MediaLibrary {
   id        String   @id @default(uuid())
   userId    String
   fileUrl   String
-  type      String // image | video | doc
+  type      String
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
 }
+
 model UserIntegration {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   userId    String
   platform  String
   token     String
@@ -303,26 +326,28 @@ model UserIntegration {
 
   user User @relation(fields: [userId], references: [id])
 
-  @@unique([userId, platform]) // Composite Key
+  @@unique([userId, platform])
 }
 
 model WebhookLog {
   id        String   @id @default(uuid())
-  platform  String   // youtube | instagram | facebook | etc
-  event     String   // event type
-  payload   Json     // البيانات اللي جاية من المنصة
+  platform  String
+  event     String
+  payload   Json
   createdAt DateTime @default(now())
 }
+
 model ApiUsage {
   id        String   @id @default(uuid())
   userId    String
-  service   String   // openai | stability | runway | etc
-  tokens    Int      // عدد التوكنات المستهلكة
-  credits   Int      // الكريدت المستهلك
+  service   String
+  tokens    Int
+  credits   Int
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
 }
+
 model IntegrationErrorLog {
   id        String   @id @default(uuid())
   userId    String?
@@ -332,4 +357,53 @@ model IntegrationErrorLog {
   createdAt DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id])
+}
+
+model CreditsUsage {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  amount    Int
+  createdAt DateTime @default(now())
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique @db.VarChar(512)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+model Plan {
+  id            String   @id @default(uuid())
+  name          String
+  priceMonthly  Int
+  credits       Int
+  requestLimit  Int       @default(100) // limit per minute/hour
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  requests PlanRequest[]
+}
+
+model PlanRequest {
+  id        String   @id @default(uuid())
+  userId    String
+  planId    String
+  status    String   @default("pending") // pending | approved | rejected
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  plan Plan @relation(fields: [planId], references: [id])
 }

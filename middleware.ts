@@ -9,34 +9,33 @@ export async function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
   const { pathname } = url;
 
-  // ✅ مسارات مفتوحة (مسموح الدخول بدون تحقق)
+  // ✅ مسارات مفتوحة (بدون تحقق)
   if (
     pathname.startsWith("/api/auth") || // login / register / refresh
-    pathname.startsWith("/_next") ||    // ملفات النظام
-    pathname.startsWith("/public") ||   // الصور و الملفات العامة
-    pathname === "/" ||                 // الصفحة الرئيسية
+    pathname.startsWith("/_next") ||    // system
+    pathname.startsWith("/public") ||   // ملفات عامة
+    pathname === "/" || 
     pathname === "/contact" ||
     pathname === "/privacy" ||
     pathname === "/terms" ||
-    pathname === "/pricing"             // صفحة الباقات
+    pathname === "/public-pricing" // صفحة التسعير العامة
   ) {
     return NextResponse.next();
   }
 
-  // ✅ جلب التوكن من الـ Header
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader) {
-    return redirectOrJson(req, "/login", { error: "Unauthorized" }, 401);
-  }
+  // ✅ جلب التوكن من الـ Cookies
+  const token = req.cookies.get("token")?.value;
+  console.log("🔑 Middleware Token:", token ? token.slice(0, 20) + "..." : "No Token");
+  console.log("🔐 ACCESS_SECRET in middleware:", ACCESS_SECRET);
 
-  const token = authHeader.split(" ")[1];
   if (!token) {
-    return redirectOrJson(req, "/login", { error: "Invalid token" }, 401);
+    return redirectOrJson(req, "/login", { error: "Unauthorized - No Token" }, 401);
   }
 
   try {
     // ✅ فك التوكن
     const decoded = jwt.verify(token, ACCESS_SECRET) as { id: string; role: string };
+    console.log("✅ Decoded Token:", decoded);
 
     // ✅ تحقق من المستخدم
     const user = await prisma.user.findUnique({ where: { id: decoded.id } });
@@ -48,44 +47,52 @@ export async function middleware(req: NextRequest) {
       return redirectOrJson(req, "/banned", { error: "Account blocked" }, 403);
     }
 
-    // ✅ تحقق من الاشتراك (لازم يكون عنده PlanRequest approved)
+    // ✅ تحقق من الاشتراك (لكن استثناء للأدمن)
     const activePlan = await prisma.planRequest.findFirst({
       where: { userId: user.id, status: "approved" },
       include: { plan: true },
     });
 
-    if (!activePlan) {
-      return redirectOrJson(req, "/pricing", { error: "No active subscription" }, 403);
+    if (!activePlan && user.role !== "ADMIN") {
+      return redirectOrJson(req, "/public-pricing", { error: "No active subscription" }, 403);
     }
 
-    // ✅ Rate Limiting حسب الباقة
-    const ip = req.ip ?? "unknown";
-    const limit = activePlan.plan.requestLimit; // مثال: 100 أو 500
-    const allowed = await rateLimit(ip, limit, 60);
-
-    if (!allowed) {
-      return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+    // ✅ تحقق من الرصيد (credits) – الأدمن يتجاوز هذا بعد
+    if (user.credits <= 0 && user.role !== "ADMIN") {
+      return redirectOrJson(req, "/dashboard/buy-credits", { error: "No credits available" }, 402);
     }
 
-    // ✅ حماية مسارات الأدمن
-    if (pathname.startsWith("/admin") && decoded.role !== "admin") {
+    // ✅ Rate Limit حسب الباقة
+    if (user.role !== "ADMIN") {
+      const ip = req.headers.get("x-forwarded-for") || "unknown";
+      const limit = activePlan?.plan.requestLimit ?? 100;
+      const allowed = await rateLimit(ip, limit, 60);
+
+      if (!allowed) {
+        return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+      }
+    }
+
+    // ✅ حماية الأدمن
+    if (pathname.startsWith("/admin") && decoded.role !== "ADMIN") {
       return redirectOrJson(req, "/dashboard", { error: "Admins only" }, 403);
     }
 
-    // ✅ حماية مسارات اليوزر
-    if (pathname.startsWith("/dashboard") && !["user", "admin"].includes(decoded.role)) {
+    // ✅ حماية المستخدم العادي
+    if (pathname.startsWith("/dashboard") && !["USER", "ADMIN"].includes(decoded.role)) {
       return redirectOrJson(req, "/login", { error: "Users only" }, 403);
     }
 
-    // ✅ نجاح: السماح بتمرير الريكوست
+    // ✅ نجاح
     return NextResponse.next();
 
-  } catch (err) {
+  } catch (err: any) {
+    console.error("❌ JWT Verify Error:", err.message);
     return redirectOrJson(req, "/login", { error: "Unauthorized or expired token" }, 401);
   }
 }
 
-// ✅ Helper: يقرر هل يرجع JSON (لو API) أو Redirect (لو صفحة)
+// Helper
 function redirectOrJson(req: NextRequest, path: string, data: any, status: number) {
   if (req.nextUrl.pathname.startsWith("/api")) {
     return NextResponse.json(data, { status });
@@ -94,7 +101,6 @@ function redirectOrJson(req: NextRequest, path: string, data: any, status: numbe
   }
 }
 
-// ✅ تحديد المسارات اللي يشملها الميدل وير
 export const config = {
   matcher: [
     "/admin/:path*",

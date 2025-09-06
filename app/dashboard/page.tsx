@@ -1,177 +1,227 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  Plus,
+  Image,
+  Video,
+  BarChart3,
+  Calendar,
+  Store,
+  Users,
+  TrendingUp,
+  Eye,
+  Heart,
+} from "lucide-react";
+import Sidebar from "@/components/Sidebar";
+import { apiFetch } from "@/lib/api";
 
-export default function UserDashboard() {
+export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
-  const [schedules, setSchedules] = useState<any[]>([]);
-  const [withdrawals, setWithdrawals] = useState<any[]>([]);
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [referral, setReferral] = useState<any>(null);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId");
+    async function loadData() {
+      try {
+        // 🟢 1. بيانات المستخدم
+        const me = await apiFetch("/api/auth/me", { method: "GET" });
+        setUser(me);
 
-    fetch("/api/user/me").then(r => r.json()).then(setUser);
-    fetch("/api/user/schedules").then(r => r.json()).then(setSchedules);
-    fetch("/api/user/withdrawals").then(r => r.json()).then(setWithdrawals);
-    fetch("/api/user/templates").then(r => r.json()).then(setTemplates);
+        // 🟢 2. المشاريع
+        const userProjects = await apiFetch("/api/projects", { method: "GET" });
+        setProjects(userProjects || []);
 
-    if (userId) {
-      fetch(`/api/referral/summary?userId=${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => res.json())
-        .then((data) => setReferral(data));
+        // 🟢 3. إحصائيات
+        const stats = await apiFetch("/api/analytics/dashboard", { method: "GET" }).catch(() => null);
+        setAnalytics(stats);
+      } catch (err) {
+        console.error("Dashboard load error:", err);
+      } finally {
+        setLoading(false);
+      }
     }
+    loadData();
   }, []);
 
-  if (!user) return <div className="p-6">جاري التحميل...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
+        <p>⚠️ Please log in to continue</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 space-y-6 bg-gray-100 min-h-screen">
-      {/* 🎯 بطاقة الإحالات */}
-      <div className="p-6 rounded-2xl shadow-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-700 text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-pink-500 via-purple-500 to-blue-600"></div>
-        <div className="relative z-10">
-          <h2 className="text-2xl font-bold mb-2">Referral Program</h2>
-          <p className="text-sm opacity-80 mb-4">
-            شارك كودك الخاص واربح مع Xstructure
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex">
+      <Sidebar />
 
-          <div className="bg-black/30 border border-white/20 p-4 rounded-xl mb-4 flex justify-between items-center">
-            <span className="font-mono text-lg">
-              {referral?.referralCode || "N/A"}
-            </span>
-            <button
-              onClick={() => navigator.clipboard.writeText(referral?.referralCode)}
-              className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm"
-            >
-              Copy
-            </button>
+      <div className="flex-1 ml-64">
+        {/* ===== Header ===== */}
+        <header className="bg-slate-800/50 backdrop-blur-xl border-b border-purple-500/20 px-8 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-white">
+                Welcome back, {user.name || user.email}!
+              </h1>
+              <p className="text-slate-300 mt-1">
+                You have {user.credits} credits remaining
+              </p>
+            </div>
+            <div className="flex space-x-3">
+              <Link
+                href="/studio/image"
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 transform hover:scale-105 flex items-center"
+              >
+                <Image className="w-4 h-4 mr-2" /> Image Studio
+              </Link>
+              <Link
+                href="/studio/video"
+                className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 transform hover:scale-105 flex items-center"
+              >
+                <Video className="w-4 h-4 mr-2" /> Video Studio
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        {/* ===== Content ===== */}
+        <div className="p-8">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <StatCard
+              title="Total Views"
+              value={analytics?.totalViews || 0}
+              icon={<Eye className="w-6 h-6 text-blue-600" />}
+              color="bg-blue-100"
+              change="+12% vs last month"
+            />
+            <StatCard
+              title="Engagement"
+              value={analytics?.totalEngagement || 0}
+              icon={<Heart className="w-6 h-6 text-purple-600" />}
+              color="bg-purple-100"
+              change="+8% vs last month"
+            />
+            <StatCard
+              title="Projects"
+              value={projects.length}
+              icon={<BarChart3 className="w-6 h-6 text-orange-600" />}
+              color="bg-orange-100"
+              change="Active projects"
+            />
+            <StatCard
+              title="Credits"
+              value={user.credits}
+              icon={<Store className="w-6 h-6 text-green-600" />}
+              color="bg-green-100"
+              change="Available to use"
+            />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl text-center">
-              <p className="text-lg font-bold">{referral?.earnings ?? 0} SAR</p>
-              <p className="text-xs opacity-70">Earnings</p>
+          {/* Projects + Activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Recent Projects */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+              <div className="p-6 border-b border-gray-200 flex justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Recent Projects</h2>
+                <Link href="/projects" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                  View all
+                </Link>
+              </div>
+              <div className="p-6">
+                {projects.length > 0 ? (
+                  <div className="space-y-4">
+                    {projects.slice(0, 3).map((project) => (
+                      <Link
+                        key={project.id}
+                        href={`/projects/${project.id}`}
+                        className="flex items-center p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all"
+                      >
+                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center mr-4">
+                          <BarChart3 className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900">{project.name}</h3>
+                          <p className="text-sm text-gray-600">{project.desc}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h3>
+                    <p className="text-gray-600 mb-4">Create your first project to get started</p>
+                    <Link
+                      href="/projects/create"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center mx-auto"
+                    >
+                      <Plus className="w-4 h-4 mr-2" /> Create Project
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl text-center">
-              <p className="text-lg font-bold">{referral?.totalReferrals ?? 0}</p>
-              <p className="text-xs opacity-70">Referrals</p>
+
+            {/* Recent Activity */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
+              </div>
+              <div className="p-6 text-gray-500 text-sm">No recent activity yet</div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <QuickAction href="/studio/image" icon={<Image className="w-6 h-6 text-blue-600" />} label="Create Image" />
+              <QuickAction href="/studio/video" icon={<Video className="w-6 h-6 text-purple-600" />} label="Create Video" />
+              <QuickAction href="/marketplace" icon={<Store className="w-6 h-6 text-green-600" />} label="Browse Templates" />
+              <QuickAction href="/team" icon={<Users className="w-6 h-6 text-orange-600" />} label="Invite Team" />
             </div>
           </div>
         </div>
-      </div>
-
-      {/* 💳 الكريدت */}
-      <div className="bg-white p-6 rounded-2xl shadow">
-        <h2 className="text-xl font-bold">رصيدك الحالي</h2>
-        <p className="text-3xl font-extrabold text-green-600">
-          {user.credits} كريدت
-        </p>
-        <button className="mt-3 px-4 py-2 bg-blue-500 text-white rounded-lg">
-          اشتر المزيد
-        </button>
-      </div>
-
-      {/* 🛠️ الخدمات */}
-      <div className="grid grid-cols-2 gap-4">
-        <ServiceCard title="توليد صور" link="/dashboard/images" />
-        <ServiceCard title="توليد فيديو" link="/dashboard/videos" />
-        <ServiceCard title="توليد صوت TTS" link="/dashboard/tts" />
-        <ServiceCard title="القوالب الإعلانية" link="/dashboard/templates" />
-      </div>
-
-      {/* 📅 الجدولة */}
-      <div className="bg-white p-6 rounded-2xl shadow">
-        <h2 className="text-xl font-bold">الجدولة 📅</h2>
-        {schedules.length === 0 ? (
-          <p className="text-gray-500">لا توجد منشورات مجدولة</p>
-        ) : (
-          <ul className="space-y-2">
-            {schedules.map((s, i) => (
-              <li key={i} className="border-b pb-2">
-                {s.content} – {new Date(s.date).toLocaleString()} –{" "}
-                {s.requireApproval ? "✅ يتطلب موافقة" : "🚀 تلقائي"}
-              </li>
-            ))}
-          </ul>
-        )}
-        <button className="mt-3 px-4 py-2 bg-purple-500 text-white rounded-lg">
-          أضف منشور
-        </button>
-      </div>
-
-      {/* 🎨 القوالب */}
-      <div className="bg-white p-6 rounded-2xl shadow">
-        <h2 className="text-xl font-bold">قوالبك الإعلانية 🎨</h2>
-        {templates.length === 0 ? (
-          <p className="text-gray-500">لا توجد قوالب محفوظة</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {templates.map((t, i) => (
-              <div
-                key={i}
-                className="p-4 border rounded-lg shadow hover:shadow-lg"
-              >
-                <p className="font-medium">{t.prompt}</p>
-                <img src={t.imageUrl} alt="template" className="rounded mt-2" />
-              </div>
-            ))}
-          </div>
-        )}
-        <Link href="/dashboard/templates">
-          <button className="mt-3 px-4 py-2 bg-indigo-500 text-white rounded-lg">
-            إنشاء قالب جديد
-          </button>
-        </Link>
-      </div>
-
-      {/* 💰 السحب */}
-      <div className="bg-white p-6 rounded-2xl shadow">
-        <h2 className="text-xl font-bold">سحب الرصيد 💰</h2>
-        {withdrawals.length === 0 ? (
-          <p className="text-gray-500">لا توجد طلبات سحب</p>
-        ) : (
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b">
-                <th className="p-2">المبلغ</th>
-                <th className="p-2">الطريقة</th>
-                <th className="p-2">الحالة</th>
-              </tr>
-            </thead>
-            <tbody>
-              {withdrawals.map((w, i) => (
-                <tr key={i} className="border-b hover:bg-gray-50">
-                  <td className="p-2">{w.amount} ريال</td>
-                  <td className="p-2">{w.method}</td>
-                  <td className="p-2">{w.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        <button className="mt-3 px-4 py-2 bg-green-500 text-white rounded-lg">
-          اطلب سحب
-        </button>
       </div>
     </div>
   );
 }
 
-function ServiceCard({ title, link }: { title: string; link: string }) {
+function StatCard({ title, value, icon, color, change }: any) {
   return (
-    <div className="bg-gray-100 p-6 rounded-xl shadow hover:shadow-lg transition">
-      <h3 className="text-lg font-semibold">{title}</h3>
-      <Link href={link}>
-        <button className="mt-2 px-3 py-1 bg-indigo-500 text-white rounded-lg">
-          ابدأ
-        </button>
-      </Link>
+    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-600">{title}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className={`${color} p-3 rounded-lg`}>{icon}</div>
+      </div>
+      <div className="flex items-center mt-4 text-sm text-gray-600">{change}</div>
     </div>
+  );
+}
+
+function QuickAction({ href, icon, label }: any) {
+  return (
+    <Link
+      href={href}
+      className="flex flex-col items-center p-6 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all"
+    >
+      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-3">{icon}</div>
+      <span className="font-medium text-gray-900">{label}</span>
+    </Link>
   );
 }

@@ -1,30 +1,33 @@
-import { PrismaClient } from "@prisma/client";
-import { NextResponse } from "next/server";
-import { sendVerificationEmail } from "@/lib/mailer";
+import { NextRequest, NextResponse } from "next/server";
+import { set } from "@/lib/redis";
+import crypto from "crypto";
+import { sendVerificationEmail } from "@/app/email";
 
-const prisma = new PrismaClient();
-
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();
-
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (!email) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digits
+    // ✅ توليد كود 6 أرقام
+    const code = crypto.randomInt(100000, 999999).toString();
 
-    await prisma.user.update({
-      where: { email },
-      data: { verificationCode: code },
-    });
+    // ✅ تحديد مفتاح ثابت (case-insensitive)
+    const key = `verify:${email.toLowerCase()}`;
 
+    // ✅ حفظ الكود في Redis مع مدة صلاحية 5 دقائق
+    await set(key, code, 300);
+
+    // ✅ إرسال الكود بالإيميل
     await sendVerificationEmail(email, code);
 
-    return NextResponse.json({ message: "Verification code sent" });
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+    return NextResponse.json({
+      success: true,
+      message: "Verification code sent to your email",
+    });
+  } catch (err: any) {
+    console.error("Send-code error:", err);
+    return NextResponse.json({ error: "Failed to send verification code" }, { status: 500 });
   }
 }

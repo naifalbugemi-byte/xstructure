@@ -11,34 +11,16 @@ export async function POST(req: NextRequest) {
     const { email, password } = await req.json();
 
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      return NextResponse.json({ error: "المستخدم غير موجود" }, { status: 404 });
-    }
-
-    if (user.isBanned || user.isDeleted) {
-      return NextResponse.json({ error: "الحساب محظور أو محذوف" }, { status: 403 });
-    }
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return NextResponse.json({ error: "كلمة المرور غير صحيحة" }, { status: 401 });
+      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
-    // إنشاء Access Token
-    const accessToken = jwt.sign(
-      { id: user.id, role: user.role },
-      ACCESS_SECRET,
-      { expiresIn: "15m" }
-    );
+    const accessToken = jwt.sign({ id: user.id, role: user.role }, ACCESS_SECRET, { expiresIn: "15m" });
+    const refreshToken = jwt.sign({ id: user.id }, REFRESH_SECRET, { expiresIn: "7d" });
 
-    // إنشاء Refresh Token
-    const refreshToken = jwt.sign(
-      { id: user.id },
-      REFRESH_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    // تخزين Refresh Token في DB
     await prisma.refreshToken.create({
       data: {
         userId: user.id,
@@ -47,13 +29,29 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       success: true,
-      accessToken,
-      refreshToken,
-      role: user.role,
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
     });
 
+    // ✅ عدلت secure + sameSite عشان يترسّب الكوكي محلي
+    res.cookies.set("token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" ? true : false,
+      path: "/",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      maxAge: 60 * 15,
+    });
+
+    res.cookies.set("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" ? true : false,
+      path: "/",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return res;
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

@@ -1,26 +1,112 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-100;
+    font-family: 'Inter', 'Poppins', sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+  }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-text-primary);
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  p {
+    font-family: 'Inter', sans-serif;
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+  }
+
+  button, .btn {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  a {
+    font-family: 'Inter', sans-serif;
+    transition: color 0.3s ease;
+  }
+
+  input, textarea, select {
+    font-family: 'Inter', sans-serif;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .glass-morphism {
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(59, 130, 246, 0.1);
+  }
+
+  .glass-morphism:hover {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+  }
+
+  .font-inter {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .font-poppins {
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .auth-input-field {
+    @apply w-full px-4 py-3 rounded-xl bg-slate-900/50 border border-slate-700 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none transition-all shadow-sm hover:shadow text-white placeholder-slate-400;
+  }
+
+  .auth-button {
+    @apply w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .accent-text {
+    @apply text-slate-400;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+:root {
+  --color-light: #f8fafc;
+  --color-dark: #020617;
+  --color-primary: #3b82f6;
+  --color-secondary: #06b6d4;
+  --color-accent: #10b981;
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #64748b;
 }

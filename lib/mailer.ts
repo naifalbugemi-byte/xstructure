@@ -1,14 +1,19 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.office365.com",
+  port: 587,
+  secure: false, // لازم false مع TLS
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: process.env.SMTP_USER, // ايميلك على اوتلوك/مايكروسوفت
+    pass: process.env.SMTP_PASS, // باسورد الحساب أو App Password
+  },
+  tls: {
+    ciphers: "SSLv3",
   },
 });
 
-// الأساسيات
+// 📩 إرسال ايميل ترحيبي
 export async function sendWelcomeEmail(to: string) {
   await transporter.sendMail({
     from: process.env.SMTP_USER,
@@ -18,6 +23,7 @@ export async function sendWelcomeEmail(to: string) {
   });
 }
 
+// 📩 إرسال ايميل عام (تستخدمه للكود وغيره)
 export async function sendBusinessEmail(to: string, subject: string, text: string) {
   await transporter.sendMail({
     from: process.env.SMTP_USER,
@@ -27,6 +33,6 @@ export async function sendBusinessEmail(to: string, subject: string, text: strin
   });
 }
 
-// alias للدوال اللي الأكواد تستدعيها
+// Aliases
 export const sendVerificationEmail = sendWelcomeEmail;
 export const sendEmail = sendBusinessEmail;
